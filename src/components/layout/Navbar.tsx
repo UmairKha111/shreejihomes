@@ -152,15 +152,7 @@ export const Navbar: React.FC = () => {
               )}
             </button>
  
-            <Link
-              to="/admin/dashboard"
-              className="p-2 text-gray-400 hover:text-[#4B1D1D] hover:scale-105 active:scale-95 transition-all duration-200"
-              title="Owner Dashboard"
-              aria-label="Owner Panel"
-              id="navbar-admin-trigger"
-            >
-              <Settings className="w-4 h-4" />
-            </Link>
+    
           </div>
  
         </div>
