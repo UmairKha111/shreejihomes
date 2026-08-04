@@ -1,0 +1,6 @@
+{
+  "name": "Shreeji Homes",
+  "description": "Premium Luxury Home Linen Store specializing in bedsheets, razais, quilts, dohars, curtains, and high-quality home textiles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
