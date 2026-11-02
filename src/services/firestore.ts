@@ -1,5 +1,6 @@
 import {
   collection,
+<<<<<<< HEAD
   doc,
   getDocs,
   getDoc,
@@ -410,3 +411,114 @@ export const resetFirestoreToDefaults = async (): Promise<void> => {
   INITIAL_FAQS.forEach(f => batchF.set(doc(db, FAQS_COL, f.id), f));
   await batchF.commit();
 };
+=======
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc
+} from "firebase/firestore";
+
+import { db } from "../firebash/firebase";
+
+import {
+  Product,
+  Category,
+  Banner,
+  Review,
+  FAQItem
+} from "../types";
+
+
+// PRODUCTS
+
+export const getProducts = async (): Promise<Product[]> => {
+  const snapshot = await getDocs(collection(db, "products"));
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Product[];
+};
+
+
+// CATEGORIES
+
+export const getCategories = async (): Promise<Category[]> => {
+  const snapshot = await getDocs(collection(db, "categories"));
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Category[];
+};
+
+
+// BANNERS
+
+export const getBanners = async (): Promise<Banner[]> => {
+  const snapshot = await getDocs(collection(db, "banners"));
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Banner[];
+};
+
+
+// REVIEWS
+
+export const getReviews = async (): Promise<Review[]> => {
+  const snapshot = await getDocs(collection(db, "reviews"));
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as Review[];
+};
+
+
+// FAQ
+
+export const getFaqs = async (): Promise<FAQItem[]> => {
+  const snapshot = await getDocs(collection(db, "faqs"));
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as FAQItem[];
+};
+// ===============================
+// ADD PRODUCT
+// ===============================
+
+export const addProductFirestore = async (
+  product: Product
+): Promise<void> => {
+  const { id, ...data } = product;
+
+  await addDoc(collection(db, "products"), data);
+};
+
+// ===============================
+// UPDATE PRODUCT
+// ===============================
+
+export const updateProductFirestore = async (
+  product: Product
+): Promise<void> => {
+  const { id, ...data } = product;
+
+  await updateDoc(doc(db, "products", id), data);
+};
+
+// ===============================
+// DELETE PRODUCT
+// ===============================
+
+export const deleteProductFirestore = async (
+  id: string
+): Promise<void> => {
+  await deleteDoc(doc(db, "products", id));
+};
+>>>>>>> 15026c6 (Fixed & updated website)
