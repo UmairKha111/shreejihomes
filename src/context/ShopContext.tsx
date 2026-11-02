@@ -1,50 +1,8 @@
-<<<<<<< HEAD
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, Category, Banner, Review, FAQItem, CartItem, GeneralSettings } from '../types';
 import { INITIAL_SETTINGS } from '../data/mockData';
 import * as firestoreService from '../services/firestore';
 
-=======
-/**
- * ShopContext.tsx
- * ─────────────────────────────────────────────────────────────────
- * RULES FOLLOWED:
- *  ✅ Named exports: useShop + ShopProvider — exact same names
- *  ✅ Every existing property & function preserved
- *  ✅ Added: loading, error, refreshProducts, refreshCategories, refreshBanners
- *  ✅ Firestore used for products; localStorage for everything else
- *  ✅ No circular imports (ShopContext never imports itself)
- *  ✅ No `any` types
- *  ✅ No architecture change — drop-in replacement
- * ─────────────────────────────────────────────────────────────────
- */
- 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from 'react';
-import { Product, Category, Banner, Review, FAQItem, CartItem } from '../types';
-import {
-  INITIAL_PRODUCTS,
-  INITIAL_CATEGORIES,
-  INITIAL_BANNERS,
-  INITIAL_REVIEWS,
-  INITIAL_FAQS,
-} from '../data/mockData';
-import {
-  getProducts,
-  addProductFirestore,
-  updateProductFirestore,
-  deleteProductFirestore,
-} from '../services/firestore';
- 
-// ─────────────────────────────────────────────────────────────────
-// Context Type — existing fields + new optional fields
-// ─────────────────────────────────────────────────────────────────
->>>>>>> 15026c6 (Fixed & updated website)
 interface ShopContextType {
   // ── Data ─────────────────────────────────────────────────────
   products: Product[];
@@ -58,7 +16,6 @@ interface ShopContextType {
   cart: CartItem[];
   cartCount: number;
   cartTotal: number;
-<<<<<<< HEAD
   loading: boolean;
   error: string | null;
 
@@ -109,60 +66,6 @@ interface ShopContextType {
   updateWhatsAppNumber: (num: string) => Promise<void>;
   updateSettings: (newSettings: Partial<GeneralSettings>) => Promise<void>;
   resetAllToDefault: () => Promise<void>;
-=======
- 
-  // ── NEW: Cloud state indicators ───────────────────────────────
-  loading: boolean;
-  error: string | null;
- 
-  // ── Cart Actions ──────────────────────────────────────────────
-  addToCart: (
-    product: Product,
-    quantity: number,
-    selectedSize?: string,
-    selectedColor?: string
-  ) => void;
-  removeFromCart: (
-    productId: string,
-    selectedSize?: string,
-    selectedColor?: string
-  ) => void;
-  updateCartQuantity: (
-    productId: string,
-    quantity: number,
-    selectedSize?: string,
-    selectedColor?: string
-  ) => void;
-  clearCart: () => void;
- 
-  // ── Wishlist Actions ──────────────────────────────────────────
-  toggleWishlist: (productId: string) => void;
-  isInWishlist: (productId: string) => boolean;
- 
-  // ── Admin: Products ───────────────────────────────────────────
-  addProduct: (product: Omit<Product, 'id' | 'rating' | 'reviewsCount'>) => void;
-  updateProduct: (product: Product) => void;
-  deleteProduct: (id: string) => void;
- 
-  // ── Admin: Categories ─────────────────────────────────────────
-  addCategory: (category: Omit<Category, 'id'>) => void;
-  updateCategory: (category: Category) => void;
-  deleteCategory: (id: string) => void;
- 
-  // ── Admin: Banners ────────────────────────────────────────────
-  addBanner: (banner: Omit<Banner, 'id'>) => void;
-  updateBanner: (banner: Banner) => void;
-  deleteBanner: (id: string) => void;
- 
-  // ── Settings ──────────────────────────────────────────────────
-  updateWhatsAppNumber: (num: string) => void;
-  resetAllToDefault: () => void;
- 
-  // ── NEW: Manual refresh triggers ──────────────────────────────
-  refreshProducts: () => Promise<void>;
-  refreshCategories: () => Promise<void>;
-  refreshBanners: () => Promise<void>;
->>>>>>> 15026c6 (Fixed & updated website)
 }
  
 // ─────────────────────────────────────────────────────────────────
@@ -178,7 +81,6 @@ export const useShop = (): ShopContextType => {
   if (!ctx) throw new Error('useShop must be used within a ShopProvider');
   return ctx;
 };
-<<<<<<< HEAD
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -333,195 +235,22 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       item.product.id === product.id &&
       item.selectedSize === selectedSize &&
       item.selectedColor === selectedColor
-=======
- 
-// ─────────────────────────────────────────────────────────────────
-// ShopProvider — EXACT same export name as before
-// ─────────────────────────────────────────────────────────────────
-export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  // ── State ───────────────────────────────────────────────────
-  const [products,      setProducts]      = useState<Product[]>([]);
-  const [categories,    setCategories]    = useState<Category[]>([]);
-  const [banners,       setBanners]       = useState<Banner[]>([]);
-  const [reviews,       setReviews]       = useState<Review[]>([]);
-  const [wishlist,      setWishlist]      = useState<string[]>([]);
-  const [whatsAppNumber,setWhatsAppNumber]= useState<string>('919024444555');
-  const [faqs,          setFaqs]          = useState<FAQItem[]>(INITIAL_FAQS);
-  const [cart,          setCart]          = useState<CartItem[]>([]);
- 
-  // ── NEW state ───────────────────────────────────────────────
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error,   setError]   = useState<string | null>(null);
- 
-  // ─────────────────────────────────────────────────────────────
-  // PRODUCTS — fetched from Firestore, falls back to localStorage
-  // then to INITIAL_PRODUCTS
-  // ─────────────────────────────────────────────────────────────
-  const fetchProducts = useCallback(async (): Promise<void> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const cloudProducts = await getProducts();
-      if (cloudProducts && cloudProducts.length > 0) {
-        setProducts(cloudProducts as Product[]);
-        // Keep local cache in sync so offline works
-        localStorage.setItem('sh_products', JSON.stringify(cloudProducts));
-      } else {
-        // Cloud returned empty — use local cache or seed data
-        const stored = localStorage.getItem('sh_products');
-        if (stored) {
-          setProducts(JSON.parse(stored) as Product[]);
-        } else {
-          setProducts(INITIAL_PRODUCTS);
-          localStorage.setItem('sh_products', JSON.stringify(INITIAL_PRODUCTS));
-        }
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to load products';
-      setError(msg);
-      // Graceful fallback — never leave products empty
-      const stored = localStorage.getItem('sh_products');
-      if (stored) {
-        setProducts(JSON.parse(stored) as Product[]);
-      } else {
-        setProducts(INITIAL_PRODUCTS);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
- 
-  // ─────────────────────────────────────────────────────────────
-  // CATEGORIES, BANNERS, REVIEWS — localStorage (same as before)
-  // ─────────────────────────────────────────────────────────────
-  const fetchCategories = useCallback(async (): Promise<void> => {
-    const stored = localStorage.getItem('sh_categories');
-    if (stored) {
-      setCategories(JSON.parse(stored) as Category[]);
-    } else {
-      setCategories(INITIAL_CATEGORIES);
-      localStorage.setItem('sh_categories', JSON.stringify(INITIAL_CATEGORIES));
-    }
-  }, []);
- 
-  const fetchBanners = useCallback(async (): Promise<void> => {
-    const stored = localStorage.getItem('sh_banners');
-    if (stored) {
-      setBanners(JSON.parse(stored) as Banner[]);
-    } else {
-      setBanners(INITIAL_BANNERS);
-      localStorage.setItem('sh_banners', JSON.stringify(INITIAL_BANNERS));
-    }
-  }, []);
- 
-  // ─────────────────────────────────────────────────────────────
-  // Bootstrap — runs once on mount
-  // ─────────────────────────────────────────────────────────────
-  useEffect(() => {
-    // Products — Firestore
-    fetchProducts();
- 
-    // Categories — localStorage
-    fetchCategories();
- 
-    // Banners — localStorage
-    fetchBanners();
- 
-    // Reviews — localStorage
-    const storedReviews = localStorage.getItem('sh_reviews');
-    if (storedReviews) {
-      setReviews(JSON.parse(storedReviews) as Review[]);
-    } else {
-      setReviews(INITIAL_REVIEWS);
-      localStorage.setItem('sh_reviews', JSON.stringify(INITIAL_REVIEWS));
-    }
- 
-    // Wishlist — localStorage
-    const storedWishlist = localStorage.getItem('sh_wishlist');
-    if (storedWishlist) setWishlist(JSON.parse(storedWishlist) as string[]);
- 
-    // WhatsApp — localStorage
-    const storedWA = localStorage.getItem('sh_whatsapp');
-    if (storedWA) {
-      setWhatsAppNumber(storedWA);
-    } else {
-      localStorage.setItem('sh_whatsapp', '919024444555');
-    }
- 
-    // Cart — localStorage
-    const storedCart = localStorage.getItem('sh_cart');
-    if (storedCart) setCart(JSON.parse(storedCart) as CartItem[]);
-  }, [fetchProducts, fetchCategories, fetchBanners]);
- 
-  // ─────────────────────────────────────────────────────────────
-  // Sync helpers (same pattern as original)
-  // ─────────────────────────────────────────────────────────────
-  const syncAndSetCategories = (next: Category[]) => {
-    setCategories(next);
-    localStorage.setItem('sh_categories', JSON.stringify(next));
-  };
- 
-  const syncAndSetBanners = (next: Banner[]) => {
-    setBanners(next);
-    localStorage.setItem('sh_banners', JSON.stringify(next));
-  };
- 
-  const syncAndSetCart = (next: CartItem[]) => {
-    setCart(next);
-    localStorage.setItem('sh_cart', JSON.stringify(next));
-  };
- 
-  // ─────────────────────────────────────────────────────────────
-  // CART functions — identical logic as original
-  // ─────────────────────────────────────────────────────────────
-  const addToCart = (
-    product: Product,
-    quantity: number,
-    selectedSize?: string,
-    selectedColor?: string
-  ) => {
-    const next = [...cart];
-    const idx = next.findIndex(
-      (i) =>
-        i.product.id === product.id &&
-        i.selectedSize === selectedSize &&
-        i.selectedColor === selectedColor
->>>>>>> 15026c6 (Fixed & updated website)
     );
-    if (idx > -1) {
-      next[idx].quantity += quantity;
+    if (existingIndex > -1) {
+      nextCart[existingIndex].quantity += quantity;
     } else {
-      next.push({ product, quantity, selectedSize, selectedColor });
+      nextCart.push({ product, quantity, selectedSize, selectedColor });
     }
-    syncAndSetCart(next);
+    syncAndSetCart(nextCart);
   };
-<<<<<<< HEAD
 
   const removeFromCart = (productId: string, selectedSize?: string, selectedColor?: string) => {
     const nextCart = cart.filter(item =>
       !(item.product.id === productId &&
         item.selectedSize === selectedSize &&
         item.selectedColor === selectedColor)
-=======
- 
-  const removeFromCart = (
-    productId: string,
-    selectedSize?: string,
-    selectedColor?: string
-  ) => {
-    syncAndSetCart(
-      cart.filter(
-        (i) =>
-          !(
-            i.product.id === productId &&
-            i.selectedSize === selectedSize &&
-            i.selectedColor === selectedColor
-          )
-      )
->>>>>>> 15026c6 (Fixed & updated website)
     );
+    syncAndSetCart(nextCart);
   };
  
   const updateCartQuantity = (
@@ -534,7 +263,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({
       removeFromCart(productId, selectedSize, selectedColor);
       return;
     }
-<<<<<<< HEAD
     const nextCart = cart.map(item => {
       if (item.product.id === productId &&
           item.selectedSize === selectedSize &&
@@ -554,28 +282,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({
   const cartTotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
   // Wishlist Functions (LocalStorage)
-=======
-    syncAndSetCart(
-      cart.map((i) =>
-        i.product.id === productId &&
-        i.selectedSize === selectedSize &&
-        i.selectedColor === selectedColor
-          ? { ...i, quantity }
-          : i
-      )
-    );
-  };
- 
-  const clearCart = () => syncAndSetCart([]);
- 
-  // Derived
-  const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
-  const cartTotal = cart.reduce((s, i) => s + i.product.price * i.quantity, 0);
- 
-  // ─────────────────────────────────────────────────────────────
-  // WISHLIST functions — identical logic as original
-  // ─────────────────────────────────────────────────────────────
->>>>>>> 15026c6 (Fixed & updated website)
   const toggleWishlist = (productId: string) => {
     const next = wishlist.includes(productId)
       ? wishlist.filter((id) => id !== productId)
@@ -585,24 +291,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({
   };
  
   const isInWishlist = (productId: string) => wishlist.includes(productId);
-<<<<<<< HEAD
 
   // Firestore Admin Actions for Products
   const addProduct = async (prodData: Omit<Product, 'id' | 'rating' | 'reviewsCount'>): Promise<string> => {
     return await firestoreService.addProduct({
-=======
- 
-  // ─────────────────────────────────────────────────────────────
-  // ADMIN: Products — Firestore + optimistic local update
-  // ─────────────────────────────────────────────────────────────
-  const addProduct = (
-    prodData: Omit<Product, 'id' | 'rating' | 'reviewsCount'>
-  ) => {
-    const newProduct: Product = {
->>>>>>> 15026c6 (Fixed & updated website)
       ...prodData,
       rating: 4.8,
-<<<<<<< HEAD
       reviewsCount: 0
     });
   };
@@ -678,112 +372,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resetAllToDefault = async (): Promise<void> => {
     await firestoreService.resetFirestoreToDefaults();
-=======
-      reviewsCount: 0,
-    };
-    // Optimistic update first so UI feels instant
-    const next = [newProduct, ...products];
-    setProducts(next);
-    localStorage.setItem('sh_products', JSON.stringify(next));
- 
-    // Persist to Firestore (fire-and-forget — errors logged silently)
-    addProductFirestore(newProduct).catch((err: unknown) => {
-      console.error('[ShopContext] addProduct Firestore error:', err);
-    });
-  };
- 
-  const updateProduct = (updatedProd: Product) => {
-    const next = products.map((p) =>
-      p.id === updatedProd.id ? updatedProd : p
-    );
-    setProducts(next);
-    localStorage.setItem('sh_products', JSON.stringify(next));
- 
-    updateProductFirestore(updatedProd).catch((err: unknown) => {
-      console.error('[ShopContext] updateProduct Firestore error:', err);
-    });
-  };
- 
-  const deleteProduct = (id: string) => {
-    const next = products.filter((p) => p.id !== id);
-    setProducts(next);
-    localStorage.setItem('sh_products', JSON.stringify(next));
- 
-    deleteProductFirestore(id).catch((err: unknown) => {
-      console.error('[ShopContext] deleteProduct Firestore error:', err);
-    });
-  };
- 
-  // ─────────────────────────────────────────────────────────────
-  // ADMIN: Categories — localStorage only (same as original)
-  // ─────────────────────────────────────────────────────────────
-  const addCategory = (catData: Omit<Category, 'id'>) => {
-    const newCat: Category = { ...catData, id: `cat-${Date.now()}` };
-    syncAndSetCategories([...categories, newCat]);
-  };
- 
-  const updateCategory = (updated: Category) => {
-    syncAndSetCategories(
-      categories.map((c) => (c.id === updated.id ? updated : c))
-    );
-  };
- 
-  const deleteCategory = (id: string) => {
-    syncAndSetCategories(categories.filter((c) => c.id !== id));
-  };
- 
-  // ─────────────────────────────────────────────────────────────
-  // ADMIN: Banners — localStorage only (same as original)
-  // ─────────────────────────────────────────────────────────────
-  const addBanner = (bannerData: Omit<Banner, 'id'>) => {
-    const newBanner: Banner = { ...bannerData, id: `banner-${Date.now()}` };
-    syncAndSetBanners([...banners, newBanner]);
-  };
- 
-  const updateBanner = (updated: Banner) => {
-    syncAndSetBanners(banners.map((b) => (b.id === updated.id ? updated : b)));
-  };
- 
-  const deleteBanner = (id: string) => {
-    syncAndSetBanners(banners.filter((b) => b.id !== id));
-  };
- 
-  // ─────────────────────────────────────────────────────────────
-  // SETTINGS — identical as original
-  // ─────────────────────────────────────────────────────────────
-  const updateWhatsAppNumber = (num: string) => {
-    const clean = num.replace(/[^0-9]/g, '');
-    setWhatsAppNumber(clean);
-    localStorage.setItem('sh_whatsapp', clean);
-  };
- 
-  const resetAllToDefault = () => {
-    [
-      'sh_products',
-      'sh_categories',
-      'sh_banners',
-      'sh_reviews',
-      'sh_whatsapp',
-      'sh_wishlist',
-      'sh_cart',
-    ].forEach((k) => localStorage.removeItem(k));
- 
-    setProducts(INITIAL_PRODUCTS);
-    setCategories(INITIAL_CATEGORIES);
-    setBanners(INITIAL_BANNERS);
-    setReviews(INITIAL_REVIEWS);
-    setWhatsAppNumber('919024444555');
-    setWishlist([]);
-    setCart([]);
-    setError(null);
->>>>>>> 15026c6 (Fixed & updated website)
   };
  
   // ─────────────────────────────────────────────────────────────
   // Context value
   // ─────────────────────────────────────────────────────────────
   return (
-<<<<<<< HEAD
     <ShopContext.Provider value={{
       products,
       categories,
@@ -829,61 +423,6 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({
       updateSettings,
       resetAllToDefault
     }}>
-=======
-    <ShopContext.Provider
-      value={{
-        // Data
-        products,
-        categories,
-        banners,
-        reviews,
-        wishlist,
-        whatsAppNumber,
-        faqs,
-        cart,
-        cartCount,
-        cartTotal,
- 
-        // NEW
-        loading,
-        error,
- 
-        // Cart
-        addToCart,
-        removeFromCart,
-        updateCartQuantity,
-        clearCart,
- 
-        // Wishlist
-        toggleWishlist,
-        isInWishlist,
- 
-        // Admin: Products
-        addProduct,
-        updateProduct,
-        deleteProduct,
- 
-        // Admin: Categories
-        addCategory,
-        updateCategory,
-        deleteCategory,
- 
-        // Admin: Banners
-        addBanner,
-        updateBanner,
-        deleteBanner,
- 
-        // Settings
-        updateWhatsAppNumber,
-        resetAllToDefault,
- 
-        // NEW: Manual refresh
-        refreshProducts:   fetchProducts,
-        refreshCategories: fetchCategories,
-        refreshBanners:    fetchBanners,
-      }}
-    >
->>>>>>> 15026c6 (Fixed & updated website)
       {children}
     </ShopContext.Provider>
   );
